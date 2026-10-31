@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
-const SECRET_KEY = process.env.JWT_SECRET || "sifat-super-secret-admin-jwt-key-2026-production-ready";
+const SECRET_KEY = process.env.JWT_SECRET || "change-this-in-production-env-file";
 const key = new TextEncoder().encode(SECRET_KEY);
 
 export async function middleware(request: NextRequest) {

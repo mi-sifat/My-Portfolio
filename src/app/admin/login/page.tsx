@@ -13,7 +13,7 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const redirectTarget = searchParams.get("from") || "/admin";
 
-  const [email, setEmail] = useState("majharulislamsifat93@gmail.com");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);

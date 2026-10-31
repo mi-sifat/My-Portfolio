@@ -1,7 +1,7 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 
-const SECRET_KEY = process.env.JWT_SECRET || "sifat-super-secret-admin-jwt-key-2026-production-ready";
+const SECRET_KEY = process.env.JWT_SECRET || "change-this-in-your-env-file-before-production";
 const key = new TextEncoder().encode(SECRET_KEY);
 
 export const COOKIE_NAME = "admin_session";

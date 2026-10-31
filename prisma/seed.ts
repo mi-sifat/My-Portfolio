@@ -18,8 +18,18 @@ async function main() {
   console.log("🌱 Starting Database Seed with verified records...");
 
   // 1. Seed Admin User
-  const adminEmail = process.env.ADMIN_EMAIL || "majharulislamsifat93@gmail.com";
-  const rawPassword = process.env.ADMIN_PASSWORD || "SifatSecurePassword2026!";
+  // IMPORTANT: Set ADMIN_EMAIL and ADMIN_PASSWORD in your .env file before running seed
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const rawPassword = process.env.ADMIN_PASSWORD;
+
+  if (!adminEmail || !rawPassword) {
+    throw new Error(
+      "❌ ADMIN_EMAIL and ADMIN_PASSWORD must be set in your .env file.\n" +
+      "   Copy .env.example to .env and fill in your credentials.\n" +
+      "   Never hardcode credentials in source code."
+    );
+  }
+
   const passwordHash = await bcrypt.hash(rawPassword, 12);
 
   await prisma.user.upsert({
