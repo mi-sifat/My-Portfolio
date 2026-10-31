@@ -1,27 +1,69 @@
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --font-display: 'Plus Jakarta Sans', sans-serif;
+  --font-serif: 'Instrument Serif', Georgia, serif;
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --background: #FBF9F5;
+  --foreground: #18181B;
+  --card-bg: rgba(255, 255, 255, 0.75);
+  --card-border: rgba(24, 24, 27, 0.08);
+  --glass-nav: rgba(251, 249, 245, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.65);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.dark {
+  --background: #0C0C0F;
+  --foreground: #F4F4F5;
+  --card-bg: rgba(22, 22, 28, 0.75);
+  --card-border: rgba(255, 255, 255, 0.08);
+  --glass-nav: rgba(12, 12, 15, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.12);
 }
 
 body {
   color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--background);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  overflow-x: hidden;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+/* Glassmorphism primitives */
+.glass-island {
+  background: var(--glass-nav);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.06), 0 1px 1px 0 rgba(255, 255, 255, 0.8) inset;
+}
+
+.glass-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.04);
+}
+
+.dark .glass-card {
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.35), 0 0 1px 1px rgba(255, 255, 255, 0.08) inset;
+}
+
+/* Subtle selection colors */
+::selection {
+  background: #FFD4C6;
+  color: #18181B;
+}
+
+/* Accessible focus ring */
+:focus-visible {
+  outline: 2px solid #F97316;
+  outline-offset: 3px;
 }

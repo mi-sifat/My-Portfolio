@@ -1,0 +1,286 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// 1. Admin Authentication & Role Management
+model User {
+  id           String      @id @default(cuid())
+  email        String      @unique
+  passwordHash String
+  name         String
+  role         String      @default("ADMIN") // "ADMIN" | "EDITOR"
+  isActive     Boolean     @default(true)
+  lastLoginAt  DateTime?
+  mediaUploads MediaItem[]
+  auditLogs    AuditLog[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+// 2. Personal Profile & Brand Settings
+model Profile {
+  id             String      @id @default("primary")
+  fullName       String      @default("Majharul Islam Sifat")
+  tagline        String
+  shortBio       String
+  aboutIntro     String
+  aboutStory     String
+  email          String
+  whatsapp       String
+  location       String
+  heroImageId    String?
+  heroImage      MediaItem?  @relation("HeroImage", fields: [heroImageId], references: [id])
+  aboutImageId   String?
+  aboutImage     MediaItem?  @relation("AboutImage", fields: [aboutImageId], references: [id])
+  resumeUrl      String?
+  socialLinks    String      // JSON string of [{ platform: "GitHub", url: "...", icon: "github", enabled: true }]
+  updatedAt      DateTime    @updatedAt
+}
+
+// 3. Centralized Media Library Tracking
+model MediaItem {
+  id           String      @id @default(cuid())
+  fileName     String
+  storageKey   String      @unique
+  url          String
+  mimeType     String
+  sizeBytes    Int
+  width        Int?
+  height       Int?
+  altText      String?
+  uploadedById String?
+  uploadedBy   User?       @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+  
+  // Relations to content
+  heroProfiles Profile[]   @relation("HeroImage")
+  aboutProfiles Profile[]  @relation("AboutImage")
+  projectCovers Project[]  @relation("ProjectCover")
+  serviceCovers Service[]  @relation("ServiceCover")
+  productCovers Product[]  @relation("ProductCover")
+  achievements  Achievement[] @relation("AchievementCert")
+
+  createdAt    DateTime    @default(now())
+
+  @@index([mimeType])
+  @@index([createdAt])
+}
+
+// 4. Skills & Proficiencies
+model Skill {
+  id          String   @id @default(cuid())
+  name        String
+  category    String   // "DEVELOPMENT" | "CREATIVE" | "TOOLS"
+  level       String   // "Beginner" | "Intermediate" | "Proficient" | "Learning"
+  order       Int      @default(0)
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category, isPublished])
+}
+
+// 5. Education History
+model Education {
+  id             String   @id @default(cuid())
+  institution    String
+  degree         String
+  department     String?
+  board          String?
+  gpa            String?
+  duration       String
+  statusBadge    String?
+  description    String?
+  certificateUrl String?
+  order          Int      @default(0)
+  isPublished    Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([order, isPublished])
+}
+
+// 6. Experience & Training History
+model Experience {
+  id               String   @id @default(cuid())
+  organization     String
+  role             String
+  type             String   // "PROFESSIONAL" | "LEARNING_TRAINING"
+  duration         String
+  startDate        String?
+  endDate          String?
+  isCurrent        Boolean  @default(false)
+  description      String
+  responsibilities String   // JSON string of string[]
+  technologies     String   // JSON string of string[]
+  externalUrl      String?
+  order            Int      @default(0)
+  isPublished      Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([type, isPublished])
+}
+
+// 7. Projects Showcase
+model Project {
+  id            String     @id @default(cuid())
+  slug          String     @unique
+  title         String
+  category      String     // "Web Development" | "E-commerce" | "Software Development" | "Android" | "IoT"
+  shortDesc     String
+  fullDesc      String
+  technologies  String     // JSON string of string[]
+  features      String     // JSON string of string[]
+  myRole        String?
+  status        String     // "Completed" | "In Progress" | "v1.1.2 Production"
+  liveDemoUrl   String?
+  githubUrl     String?
+  coverImageId  String?
+  coverImage    MediaItem? @relation("ProjectCover", fields: [coverImageId], references: [id], onDelete: SetNull)
+  coverImageUrl String?
+  galleryUrls   String     // JSON string of string[]
+  isFeatured    Boolean    @default(false)
+  isPublished   Boolean    @default(true)
+  order         Int        @default(0)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([slug])
+  @@index([category, isPublished])
+  @@index([isFeatured, isPublished])
+}
+
+// 8. YouTube & Creative Content
+model Video {
+  id           String   @id @default(cuid())
+  title        String
+  videoUrl     String
+  youtubeId    String
+  category     String   // "Food Blogging" | "Travel Vlogging" | "Resort Reviews" | "Tour & Lifestyle"
+  thumbnailUrl String
+  description  String?
+  isFeatured   Boolean  @default(false)
+  isPublished  Boolean  @default(true)
+  order        Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([category, isPublished])
+  @@index([isFeatured])
+}
+
+// 9. Services
+model Service {
+  id            String     @id @default(cuid())
+  slug          String     @unique
+  title         String
+  category      String     @default("Web Development")
+  icon          String     @default("Layers")
+  shortDesc     String
+  fullDesc      String
+  features      String     // JSON string of string[]
+  deliverables  String     // JSON string of string[]
+  pricing       String?
+  deliveryTime  String?
+  coverImageId  String?
+  coverImage    MediaItem? @relation("ServiceCover", fields: [coverImageId], references: [id], onDelete: SetNull)
+  coverImageUrl String?
+  galleryUrls   String     @default("[]")
+  isFeatured    Boolean    @default(false)
+  order         Int        @default(0)
+  isPublished   Boolean    @default(true)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([slug, isPublished])
+  @@index([isFeatured, isPublished])
+}
+
+// 10. Digital Products Marketplace
+model Product {
+  id           String     @id @default(cuid())
+  slug         String     @unique
+  name         String
+  shortDesc    String
+  fullDesc     String
+  category     String
+  status       String     // "Coming Soon" | "In Development" | "Planned"
+  price        String?
+  demoUrl      String?
+  coverImageId String?
+  coverImage   MediaItem? @relation("ProductCover", fields: [coverImageId], references: [id], onDelete: SetNull)
+  galleryUrls  String     // JSON string of string[]
+  features     String     // JSON string of string[]
+  isFeatured   Boolean    @default(false)
+  isPublished  Boolean    @default(true)
+  order        Int        @default(0)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([slug, isPublished])
+}
+
+// 11. Achievements & Certificates
+model Achievement {
+  id             String     @id @default(cuid())
+  title          String
+  organization   String
+  issueDate      String?
+  category       String     // "Academic" | "Software Milestone" | "Engineering Progression"
+  statusLabel    String?
+  description    String?
+  certificateId  String?
+  certificate    MediaItem? @relation("AchievementCert", fields: [certificateId], references: [id], onDelete: SetNull)
+  verifyUrl      String?
+  order          Int        @default(0)
+  isPublished    Boolean    @default(true)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  @@index([category, isPublished])
+}
+
+// 12. Contact Inquiries & Notifications
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  subject   String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([isRead, createdAt])
+}
+
+// 13. Audit Log for Security & Admin Activity
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String   // "CREATE_PROJECT" | "UPDATE_PROFILE" | "DELETE_MEDIA"
+  entity    String   // "Project" | "Skill" | "Profile"
+  entityId  String?
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  metadata  String?  // JSON string
+  timestamp DateTime @default(now())
+
+  @@index([timestamp])
+}
+
+// 14. Global Site Settings & SEO
+model SiteSetting {
+  id         String   @id @default("global")
+  siteName   String   @default("Majharul Islam Sifat | Portfolio & Personal Brand")
+  metaTitle  String
+  metaDesc   String
+  keywords   String
+  ogImage    String?
+  footerText String
+  updatedAt  DateTime @updatedAt
+}
+

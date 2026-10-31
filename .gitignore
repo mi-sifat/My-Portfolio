@@ -28,9 +28,24 @@ yarn-error.log*
 # local env files
 .env*.local
 
+# Environment files (keep .env.example but not .env with secrets)
+.env
+
 # vercel
 .vercel
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# SQLite database (local only - use cloud DB for production)
+prisma/dev.db
+prisma/dev.db-journal
+prisma/*.db
+prisma/*.db-journal
+
+# Uploaded files (too large for git, use cloud storage)
+public/uploads/
+
+# OS files
+Thumbs.db

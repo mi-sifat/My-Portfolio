@@ -1,101 +1,129 @@
-import Image from "next/image";
+import { HeroSection } from "@/components/home/HeroSection";
+import { AboutPreview } from "@/components/home/AboutPreview";
+import { HomeSectionPreviews, HomeProject, HomeService } from "@/components/home/HomeSectionPreviews";
+import { db } from "@/lib/db";
+import { PROJECTS_DATA, SERVICES_DATA } from "@/lib/portfolioData";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  let projects: HomeProject[] = [];
+  let services: HomeService[] = [];
+
+  try {
+    // 1. Fetch featured published projects from DB
+    let rawProjects = await db.project.findMany({
+      where: { isPublished: true, isFeatured: true },
+      include: { coverImage: true },
+      orderBy: { order: "asc" },
+    });
+
+    if (rawProjects.length === 0) {
+      // Fallback to top 3 published projects if none marked featured
+      rawProjects = await db.project.findMany({
+        where: { isPublished: true },
+        include: { coverImage: true },
+        orderBy: { order: "asc" },
+        take: 3,
+      });
+    }
+
+    if (rawProjects.length > 0) {
+      projects = rawProjects.map((p) => {
+        let techs: string[] = [];
+        try {
+          techs = typeof p.technologies === "string" ? JSON.parse(p.technologies) : p.technologies;
+        } catch {
+          techs = [];
+        }
+        return {
+          id: p.id,
+          slug: p.slug,
+          title: p.title,
+          category: p.category,
+          shortDesc: p.shortDesc,
+          technologies: techs,
+          status: p.status,
+          liveDemoUrl: p.liveDemoUrl,
+          githubUrl: p.githubUrl,
+          coverImageUrl: p.coverImageUrl || p.coverImage?.url || null,
+        };
+      });
+    }
+
+    // 2. Fetch published services from DB
+    const rawServices = await db.service.findMany({
+      where: { isPublished: true },
+      include: { coverImage: true },
+      orderBy: { order: "asc" },
+      take: 3,
+    });
+
+    if (rawServices.length > 0) {
+      services = rawServices.map((s) => {
+        let feats: string[] = [];
+        try {
+          feats = typeof s.features === "string" ? JSON.parse(s.features) : s.features;
+        } catch {
+          feats = [];
+        }
+        return {
+          id: s.id,
+          slug: s.slug,
+          title: s.title,
+          category: s.category || "Service Offering",
+          shortDesc: s.shortDesc,
+          pricing: s.pricing,
+          deliveryTime: s.deliveryTime,
+          features: feats,
+          coverImageUrl: s.coverImageUrl || s.coverImage?.url || null,
+        };
+      });
+    }
+  } catch (err) {
+    console.error("Home page DB query error:", err);
+  }
+
+  // Resilient fallback to static data if database is temporarily unavailable
+  if (projects.length === 0) {
+    projects = PROJECTS_DATA.slice(0, 3).map((p) => ({
+      id: p.id,
+      slug: p.slug,
+      title: p.title,
+      category: p.category,
+      shortDesc: p.shortDesc,
+      technologies: p.technologies,
+      status: p.versionOrStatus,
+      liveDemoUrl: p.liveDemoUrl || null,
+      githubUrl: p.githubUrl || null,
+      coverImageUrl: null,
+    }));
+  }
+
+  if (services.length === 0) {
+    services = SERVICES_DATA.map((s) => ({
+      id: s.id,
+      slug: s.slug,
+      title: s.title,
+      category: "Service Offering",
+      shortDesc: s.shortDesc,
+      pricing: "Custom Scope",
+      deliveryTime: s.estimatedDelivery || null,
+      features: s.features,
+      coverImageUrl: null,
+    }));
+  }
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <div className="space-y-32 pb-24">
+      {/* 1. HERO SECTION WITH PARALLAX & ENTRANCE */}
+      <HeroSection />
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      {/* 2. ABOUT ME PREVIEW WITH SCROLL REVEAL */}
+      <AboutPreview />
+
+      {/* 3. MODULAR PREVIEWS (LIVE DATABASE PROJECTS & SERVICES WITH BANNERS) */}
+      <HomeSectionPreviews projects={projects} services={services} />
     </div>
   );
 }
